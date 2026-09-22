@@ -43,8 +43,10 @@ function partsFor(iso) {
 //   readOnly: boolean          — share view is read-only, owner is editable
 //   emptyText: string          — message shown when there are no records at all
 //   onModalChanged: (goal, records) => void   — owner only, to refresh badges
+//   listId, ownerUid           — owner only; needed so modal uploads land in the
+//                                right storage folder
 export function renderMemoryTimeline(categories, options = {}) {
-  const { readOnly = true, emptyText = '還沒有公開的回憶', onModalChanged } = options;
+  const { readOnly = true, emptyText = '還沒有公開的回憶', onModalChanged, listId, ownerUid } = options;
 
   const root = el('div', { class: 'timeline' });
 
@@ -70,13 +72,13 @@ export function renderMemoryTimeline(categories, options = {}) {
       currentBody = el('div', { class: 'timeline__body' });
       root.appendChild(currentBody);
     }
-    currentBody.appendChild(renderCard(it, parts, { readOnly, onModalChanged }));
+    currentBody.appendChild(renderCard(it, parts, { readOnly, onModalChanged, listId, ownerUid }));
   }
 
   return root;
 }
 
-function renderCard(it, parts, { readOnly, onModalChanged }) {
+function renderCard(it, parts, { readOnly, onModalChanged, listId, ownerUid }) {
   const { rec, goal } = it;
 
   const chip = el(
@@ -87,6 +89,8 @@ function renderCard(it, parts, { readOnly, onModalChanged }) {
       onClick: () =>
         openRecordModal(goal, {
           readOnly,
+          listId,
+          ownerUid,
           onChanged: readOnly ? undefined : (records) => onModalChanged?.(goal, records),
         }),
     },

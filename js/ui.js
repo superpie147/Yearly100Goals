@@ -53,7 +53,10 @@ export function toast(message, type = 'info', ms = 2600) {
 // ---- modal -----------------------------------------------------------------
 // Opens an overlay. content is a DOM node. Returns a close() fn.
 // Closable via X, backdrop click, and Esc.
-export function openModal(content, { onClose, labelledBy } = {}) {
+// beforeClose: optional async guard — () => boolean | Promise<boolean>. Applied
+// to the three user-initiated close paths (×, backdrop, Esc); a falsy result
+// cancels the close. The returned close() always closes, guard or not.
+export function openModal(content, { onClose, labelledBy, beforeClose } = {}) {
   const host = document.getElementById('modal-host');
   const backdrop = el('div', { class: 'modal-backdrop' });
   const dialog = el('div', {
@@ -83,12 +86,23 @@ export function openModal(content, { onClose, labelledBy } = {}) {
       onClose?.();
     }, 220);
   }
-  function onKey(e) {
-    if (e.key === 'Escape') close();
+  let guarding = false;
+  async function requestClose() {
+    if (closed || guarding) return;
+    if (!beforeClose) return close();
+    guarding = true;
+    try {
+      if (await beforeClose()) close();
+    } finally {
+      guarding = false;
+    }
   }
-  closeBtn.addEventListener('click', close);
+  function onKey(e) {
+    if (e.key === 'Escape') requestClose();
+  }
+  closeBtn.addEventListener('click', requestClose);
   backdrop.addEventListener('mousedown', (e) => {
-    if (e.target === backdrop) close();
+    if (e.target === backdrop) requestClose();
   });
   document.addEventListener('keydown', onKey);
   requestAnimationFrame(() => backdrop.classList.add('is-in'));

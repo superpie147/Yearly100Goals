@@ -65,6 +65,8 @@ export function renderLiveMode(ctx, deps) {
     memoryArea.appendChild(
       renderMemoryTimeline(categories, {
         readOnly: false,
+        listId: list.id,
+        ownerUid: user.id,
         emptyText: '還沒有任何回憶，完成第一個目標時記下一筆吧',
         onModalChanged: (goal, records) => {
           goal.records = records;
